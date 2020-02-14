@@ -15,40 +15,43 @@ const app = new Clarifai.App({
 
 const particlesOptions = {
   particles: {
-      polygons: {
-          enable: true,
-          type: 'inside',
-          move: {
-              radius: 5
-          }
+    number: {
+      value: 90,
+      density: {
+        enable: true,
+        value_area: 900
       }
+    }
   }
 }
+
 class App extends Component {
-  constructor(){
+  constructor() {
     super();
     this.state = {
-      input:'',
-      imageUrl:'',
-      box: {}
+      input: '',
+      imageUrl: '',
+      box: []
     }
   }
 
-  calculateFaceLocation = (data) => {
-    const clarifaiFace = data.outputs[0].data.regions[0].region_info.bounding_box
-    const image = document.getElementById('inputimage');
-    const width = Number(image.width);
-    const height = Number(image.height);
-    return{
-      leftCol: clarifaiFace.left_col * width,
-      topRow: clarifaiFace.top_row * height,
-      rightCol: width - (clarifaiFace.right_col * width),
-      bottomRow: height - (clarifaiFace.bottom_row * height)
-    }
+  calculateFaceLocation = (data, i) => {
+      const clarifaiFace = data.outputs[0].data.regions[i].region_info.bounding_box;
+      const image = document.getElementById('inputimage');
+      const width = Number(image.width);
+      const height = Number(image.height);
+      return {
+        leftcol: clarifaiFace.left_col * width,
+        toprow: clarifaiFace.top_row * height,
+        rightcol: width - (clarifaiFace.right_col * width),
+        bottomrow: height - (clarifaiFace.bottom_row * height)
+      }
   }
 
   displayFaceBox = (box) => {
-    this.setState({box: box});
+    this.setState({
+      box: [...this.state.box, box]
+    });
   }
 
   onInputChange = (event) => {
@@ -56,12 +59,20 @@ class App extends Component {
   }
 
   onButtonSubmit = () => {
-    this.setState({imageUrl:this.state.input});
+    this.setState({
+      box: [],
+      imageUrl: this.state.input
+    });
     app.models.predict(
-      Clarifai.FACE_DETECT_MODEL, 
-      this.state.input)
-    .then(response => this.displayFaceBox(this.calculateFaceLocation(response)))
-    .catch(err => console.log(err));
+        Clarifai.FACE_DETECT_MODEL, 
+        this.state.input)
+      .then(response => {
+        for(let i = 0; i < response.outputs[0].data.regions.length; i++){
+          this.displayFaceBox(this.calculateFaceLocation(response, i))
+        }
+      }
+      )
+      .catch(err => console.log(err));
   }
 
   render() {
