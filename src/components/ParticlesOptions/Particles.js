@@ -12,7 +12,7 @@ const particlesOptions = {
       "value": "#fff"
     },
     "shape": {
-      "type": "circle",
+      "type": "star",
       "stroke": {
         "width": 0,
         "color": "#000000"
